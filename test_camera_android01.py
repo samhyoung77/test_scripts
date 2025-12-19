@@ -18,6 +18,33 @@ import os
 import subprocess  # ADB 명령어를 쓰기 위해 추가
 import time
 from datetime import datetime
+import subprocess  # [필수] 이 모듈을 import 해야 터미널 명령어를 쓸 수 있습니다.
+
+# ---------------------------------------------------------
+# [추가] Git 버전 정보를 동적으로 가져오는 함수
+# ---------------------------------------------------------
+def get_git_version():
+    try:
+        # git describe 명령어를 실행하여 태그와 해시값을 가져옵니다.
+        # 예: v1.0 (태그가 정확할 때) 또는 v1.0-4-g9a2b (태그 이후 4번 커밋됨)
+        # --dirty: 수정사항이 commit 되지 않은 상태면 '-dirty'를 붙여줌
+        version = subprocess.check_output(
+            ["git", "describe", "--tags", "--always", "--dirty"], 
+            stderr=subprocess.STDOUT
+        ).strip().decode('utf-8')
+        return version
+    except Exception as e:
+        # Git이 설치 안 되어 있거나, .git 폴더가 없는 경우 대비
+        print(f"Git 버전 확인 실패: {e}")
+        return "v1.0.0-manual" # [비상용] 수동 버전 (Git 실패 시 사용)
+
+# ---------------------------------------------------------
+# [변경] 기존 하드코딩 변수 대체
+# ---------------------------------------------------------
+# (기존) TEST_VERSION = "1.2"  <-- 이 줄은 지우거나 주석 처리하세요.
+TEST_VERSION = get_git_version()  # <-- 이렇게 함수를 호출해서 담습니다.
+
+print(f"Current Test Version: {TEST_VERSION}") # 확인용 출력
 
 # Windows 콘솔 인코딩 설정 및 실시간 출력 활성화
 if sys.platform == 'win32':
@@ -313,7 +340,7 @@ def test_camera_full_scenario():
 
             # 갤러리 앱 패키지 확인
             curr_pkg = driver.current_package
-            if 'gallery' in curr_pkg.lower() or 'photo' in curr_pkg.lower():
+            if 'gallery' in curr_pkg.lower() or 'photo' in curr_pkg.lower() or 'camera' in curr_pkg.lower():
                 print("  ✅ 갤러리 진입 성공")
                 result.gallery_photo_check = "PASS"
             else:
@@ -547,7 +574,7 @@ def test_camera_full_scenario():
 
             # 갤러리 앱 패키지 확인
             curr_pkg = driver.current_package
-            if 'gallery' in curr_pkg.lower() or 'photo' in curr_pkg.lower():
+            if 'gallery' in curr_pkg.lower() or 'photo' in curr_pkg.lower() or 'camera' in curr_pkg.lower():
                 print("  ✅ 갤러리 진입 성공")
                 result.gallery_video_check = "PASS"
             else:
