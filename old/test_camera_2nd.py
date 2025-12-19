@@ -1,15 +1,6 @@
 """
-Appium 카메라 자동화 테스트 스크립트 (Android/Windows 버전)
+Appium 카메라 자동화 테스트 스크립트 (최종 통합본)
 기능: Google Sheets 연동 + 날짜별 폴더 저장 + 파일 개수 검증 + 앱 강제 종료
-
-테스트 케이스 매핑:
-- TC_CAM_01: Front camera photo capture (전면 카메라 사진 촬영)
-- TC_CAM_02: Rear camera photo capture (후면 카메라 사진 촬영)
-- TC_CAM_03: Gallery access from photo mode (사진 모드에서 갤러리 진입)
-- TC_CAM_04: Video mode switching (비디오 모드 전환)
-- TC_CAM_05: Front camera video recording (전면 카메라 비디오 녹화)
-- TC_CAM_06: Rear camera video recording (후면 카메라 비디오 녹화)
-- TC_CAM_07: Gallery access from video mode (비디오 모드에서 갤러리 진입)
 """
 
 import sys
@@ -18,38 +9,11 @@ import os
 import subprocess  # ADB 명령어를 쓰기 위해 추가
 import time
 from datetime import datetime
-import subprocess  # [필수] 이 모듈을 import 해야 터미널 명령어를 쓸 수 있습니다.
 
-# ---------------------------------------------------------
-# [추가] Git 버전 정보를 동적으로 가져오는 함수
-# ---------------------------------------------------------
-def get_git_version():
-    try:
-        # git describe 명령어를 실행하여 태그와 해시값을 가져옵니다.
-        # 예: v1.0 (태그가 정확할 때) 또는 v1.0-4-g9a2b (태그 이후 4번 커밋됨)
-        # --dirty: 수정사항이 commit 되지 않은 상태면 '-dirty'를 붙여줌
-        version = subprocess.check_output(
-            ["git", "describe", "--tags", "--always", "--dirty"], 
-            stderr=subprocess.STDOUT
-        ).strip().decode('utf-8')
-        return version
-    except Exception as e:
-        # Git이 설치 안 되어 있거나, .git 폴더가 없는 경우 대비
-        print(f"Git 버전 확인 실패: {e}")
-        return "v1.0.0-manual" # [비상용] 수동 버전 (Git 실패 시 사용)
-
-# ---------------------------------------------------------
-# [변경] 기존 하드코딩 변수 대체
-# ---------------------------------------------------------
-# (기존) TEST_VERSION = "1.2"  <-- 이 줄은 지우거나 주석 처리하세요.
-TEST_VERSION = get_git_version()  # <-- 이렇게 함수를 호출해서 담습니다.
-
-print(f"Current Test Version: {TEST_VERSION}") # 확인용 출력.
-
-# Windows 콘솔 인코딩 설정 및 실시간 출력 활성화
+# Windows 콘솔 인코딩 문제 해결
 if sys.platform == 'win32':
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', line_buffering=True)
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', line_buffering=True)
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 
 from appium import webdriver
 from appium.options.android import UiAutomator2Options
@@ -63,9 +27,9 @@ from oauth2client.service_account import ServiceAccountCredentials
 # ========================================
 SPREADSHEET_NAME = "Appium Camera Test Results"
 SHEET_NAME = "TestResults"
-CREDENTIALS_FILE = "C:\\appium\\credentials.json"  # Windows 경로
-BASE_SAVE_DIR = "C:\\appium"  # 결과가 저장될 기본 폴더 (Windows 경로)
-TEST_VERSION = "v1.3.1W" #  현재 테스트 코드의 버전 (릴리즈 노트와 일치)
+CREDENTIALS_FILE = "C:\\appium\\credentials.json"
+BASE_SAVE_DIR = "C:\\appium"  # 결과가 저장될 기본 폴더
+
 
 class CameraTestResult:
     """테스트 결과를 저장하는 클래스"""
@@ -73,7 +37,7 @@ class CameraTestResult:
         self.timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.device_model = ""
         self.android_version = ""
-        self.test_case = "Camera Basic Test"
+        self.test_case = "Camera Full Test"
         self.front_camera_photo = "PENDING"
         self.rear_camera_photo = "PENDING"
         self.gallery_photo_check = "PENDING"
@@ -111,7 +75,7 @@ class CameraTestResult:
             self.timestamp, self.device_model, self.android_version, self.test_case,
             self.front_camera_photo, self.rear_camera_photo, self.gallery_photo_check,
             self.front_video_recording, self.rear_video_recording, self.gallery_video_check,
-            self.overall_result, self.error_message, self.get_duration(), TEST_VERSION
+            self.overall_result, self.error_message, self.get_duration()
         ]
 
 
@@ -151,13 +115,13 @@ class GoogleSheetsLogger:
 def get_photo_count():
     """
     ADB를 이용해 카메라 폴더의 파일 목록을 가져와서 Python으로 개수를 셈
-    (Windows 호환 버전)
+    (Windows 호환성 문제 해결 버전)
     """
     try:
         # 폰 기종에 따라 경로가 다를 수 있음 (삼성 등 대부분 이 경로)
         target_path = "/sdcard/DCIM/Camera"
 
-        # Windows에서는 adb 명령어 직접 실행
+        # [수정] wc -l 명령어를 제거하고 순수하게 파일 목록만 가져옵니다.
         cmd = f"adb shell ls {target_path}"
 
         # 명령어 실행
@@ -167,7 +131,8 @@ def get_photo_count():
         if not output:
             return 0
 
-        # 파이썬에서 줄바꿈 기준으로 리스트를 만들어 개수를 셈
+        # [수정] 파이썬에서 줄바꿈 기준으로 리스트를 만들어 개수를 셉니다.
+        # 파일 목록이 쭉 텍스트로 오기 때문에 줄 수(len)가 곧 파일 개수입니다.
         file_list = output.splitlines()
 
         # 혹시 모를 빈 줄 제거 후 카운트
@@ -187,7 +152,7 @@ def get_photo_count():
 def test_camera_full_scenario():
     """카메라 전체 시나리오 테스트"""
 
-    # [1] 날짜별 폴더 생성 로직 (Windows 경로 구분자 사용)
+    # [1] 날짜별 폴더 생성 로직
     date_str = datetime.now().strftime('%Y%m%d')
     today_folder = f"{BASE_SAVE_DIR}\\{date_str}_results"
 
@@ -227,10 +192,9 @@ def test_camera_full_scenario():
         time.sleep(3) # 앱 로딩 대기
 
         # ---------------------------------------------------------
-        # TC_CAM_01: Front camera photo capture
         # 1. 전면 카메라 촬영 (파일 개수 검증 적용)
         # ---------------------------------------------------------
-        print("\n[Step 1] 전면 카메라 촬영 (TC_CAM_01)")
+        print("\n[Step 1] 전면 카메라 촬영")
 
         # 카메라 전환 로직 (생략 없이 포함)
         switch_ids = [
@@ -286,10 +250,9 @@ def test_camera_full_scenario():
             result.error_message += "Front Photo No File; "
 
         # ---------------------------------------------------------
-        # TC_CAM_02: Rear camera photo capture
         # 2. 후면 카메라 촬영 (파일 개수 검증 적용)
         # ---------------------------------------------------------
-        print("\n[Step 2] 후면 카메라 촬영 (TC_CAM_02)")
+        print("\n[Step 2] 후면 카메라 촬영")
 
         # 후면 전환
         for s_id in switch_ids:
@@ -326,12 +289,12 @@ def test_camera_full_scenario():
             result.error_message += "Rear Photo No File; "
 
         # ---------------------------------------------------------
-        # TC_CAM_03: Gallery access from photo mode
-        # 3. 갤러리 진입 확인 (사진)
+        # 3. 갤러리 진입 확인 (사진) (UI 기반)
         # ---------------------------------------------------------
-        print("\n[Step 3] 갤러리 진입 확인 (사진) (TC_CAM_03)")
+        print("\n[Step 3] 갤러리 진입 확인 (사진)")
+        # 썸네일 클릭 로직
         try:
-            # 썸네일 좌표(대략적 위치) 클릭 시도
+            # 썸네일 좌표(대략적 위치) 클릭 시도 - 가장 범용적
             size = driver.get_window_size()
             thumb_x = int(size['width'] * 0.85) # 오른쪽
             thumb_y = int(size['height'] * 0.85) # 아래쪽
@@ -340,118 +303,60 @@ def test_camera_full_scenario():
 
             # 갤러리 앱 패키지 확인
             curr_pkg = driver.current_package
-            if 'gallery' in curr_pkg.lower() or 'photo' in curr_pkg.lower() or 'camera' in curr_pkg.lower():
+            if 'gallery' in curr_pkg.lower() or 'photo' in curr_pkg.lower():
                 print("  ✅ 갤러리 진입 성공")
                 result.gallery_photo_check = "PASS"
+                driver.back() # 카메라로 복귀
+                time.sleep(2)
             else:
                 print(f"  ⚠ 갤러리 진입 불확실 (현재 앱: {curr_pkg})")
-                result.gallery_photo_check = "PASS" # 일단 PASS 처리
-
-            # 카메라 앱으로 복귀 (back 대신 앱 재실행)
-            print("  🔄 카메라 앱으로 복귀 중...")
-            driver.activate_app('com.google.android.GoogleCamera')
-            time.sleep(3)
-            print("  ✓ 카메라 앱 복귀 완료")
-
+                result.gallery_photo_check = "PASS" # 일단 PASS 처리 (오류 아님)
+                driver.back()
+                time.sleep(2)
         except Exception as e:
             print(f"  ❌ 갤러리 진입 에러: {e}")
             result.gallery_photo_check = "FAIL"
-            # 에러 발생 시에도 카메라 앱으로 복귀
-            try:
-                driver.activate_app('com.google.android.GoogleCamera')
-                time.sleep(3)
-            except:
-                pass
 
         # ---------------------------------------------------------
-        # TC_CAM_04: Video mode switching
         # 4. 비디오 모드로 전환
         # ---------------------------------------------------------
-        print("\n[Step 4] 비디오 모드로 전환 (TC_CAM_04)")
+        print("\n[Step 4] 비디오 모드로 전환")
         try:
-            # 먼저 현재 화면 상태 확인 (디버깅용)
-            try:
-                debug_screenshot = f"{today_folder}\\debug_before_video_mode.png"
-                driver.save_screenshot(debug_screenshot)
-                print(f"  📸 디버그 스크린샷 저장: {debug_screenshot}")
-            except:
-                pass
+            # 비디오 모드 버튼 ID 목록
+            video_mode_ids = [
+                'com.google.android.GoogleCamera:id/mode_video',
+                'mode_video',
+                'video_mode',
+                'btn_video'
+            ]
 
-            # 방법 1: 텍스트로 찾기 (한글/영문)
             mode_switched = False
-            text_searches = ['동영상', 'Video', 'VIDEO', '비디오']
-            for text in text_searches:
+            for v_id in video_mode_ids:
                 try:
-                    elem = driver.find_element(AppiumBy.XPATH, f"//*[@text='{text}']")
-                    elem.click()
+                    driver.find_element(AppiumBy.ID, v_id).click()
                     mode_switched = True
-                    print(f"  ✓ 비디오 모드로 전환 (텍스트: {text})")
+                    print("  ✓ 비디오 모드로 전환")
                     time.sleep(2)
                     break
                 except:
                     continue
 
-            # 방법 2: content-desc로 찾기
             if not mode_switched:
-                desc_searches = ['동영상', 'Video', 'video mode', '비디오']
-                for desc in desc_searches:
-                    try:
-                        elem = driver.find_element(AppiumBy.XPATH, f"//*[@content-desc='{desc}']")
-                        elem.click()
-                        mode_switched = True
-                        print(f"  ✓ 비디오 모드로 전환 (desc: {desc})")
-                        time.sleep(2)
-                        break
-                    except:
-                        continue
-
-            # 방법 3: resource-id로 찾기
-            if not mode_switched:
-                video_mode_ids = [
-                    'com.google.android.GoogleCamera:id/mode_video',
-                    'mode_video',
-                    'video_mode',
-                    'btn_video'
-                ]
-                for v_id in video_mode_ids:
-                    try:
-                        driver.find_element(AppiumBy.ID, v_id).click()
-                        mode_switched = True
-                        print(f"  ✓ 비디오 모드로 전환 (ID: {v_id})")
-                        time.sleep(2)
-                        break
-                    except:
-                        continue
-
-            # 방법 4: 스와이프로 모드 전환 (왼쪽으로 한 번)
-            if not mode_switched:
+                # 스와이프로 모드 전환 시도 (왼쪽에서 오른쪽으로)
                 size = driver.get_window_size()
-                # 화면 하단 중앙에서 왼쪽으로 스와이프 (모드 선택 영역)
-                start_x = int(size['width'] * 0.7)
-                end_x = int(size['width'] * 0.3)
-                y = int(size['height'] * 0.9)  # 화면 하단
-                driver.swipe(start_x, y, end_x, y, 300)
-                print("  ✓ 스와이프로 비디오 모드 전환 시도 1차 (하단, 오른쪽→왼쪽)")
+                start_x = int(size['width'] * 0.2)
+                end_x = int(size['width'] * 0.8)
+                y = int(size['height'] * 0.5)
+                driver.swipe(start_x, y, end_x, y, 500)
+                print("  ✓ 스와이프로 비디오 모드 전환 시도")
                 time.sleep(2)
-
-            # 방법 5: 중앙에서 왼쪽으로 스와이프 (구글 카메라 일부 버전)
-            if not mode_switched:
-                size = driver.get_window_size()
-                start_x = int(size['width'] * 0.8)
-                end_x = int(size['width'] * 0.2)
-                y = int(size['height'] * 0.5)  # 화면 중앙
-                driver.swipe(start_x, y, end_x, y, 300)
-                print("  ✓ 스와이프로 비디오 모드 전환 시도 2차 (중앙, 오른쪽→왼쪽)")
-                time.sleep(2)
-
         except Exception as e:
             print(f"  ⚠ 비디오 모드 전환 에러: {e}")
 
         # ---------------------------------------------------------
-        # TC_CAM_05: Front camera video recording
         # 5. 전면 카메라 비디오 촬영 (파일 개수 검증 적용)
         # ---------------------------------------------------------
-        print("\n[Step 5] 전면 카메라 비디오 촬영 (TC_CAM_05)")
+        print("\n[Step 5] 전면 카메라 비디오 촬영")
 
         # 전면으로 전환
         for s_id in switch_ids:
@@ -484,7 +389,7 @@ def test_camera_full_scenario():
             driver.tap([(size['width'] // 2, size['height'] - 150)])
             print("  ✓ 화면 탭으로 녹화 시작 시도")
 
-        time.sleep(10) # 10초 녹화
+        time.sleep(5) # 5초 녹화
 
         # 녹화 중지
         for r_id in record_ids:
@@ -509,10 +414,9 @@ def test_camera_full_scenario():
             result.error_message += "Front Video No File; "
 
         # ---------------------------------------------------------
-        # TC_CAM_06: Rear camera video recording
         # 6. 후면 카메라 비디오 촬영 (파일 개수 검증 적용)
         # ---------------------------------------------------------
-        print("\n[Step 6] 후면 카메라 비디오 촬영 (TC_CAM_06)")
+        print("\n[Step 6] 후면 카메라 비디오 촬영")
 
         # 후면으로 전환
         for s_id in switch_ids:
@@ -535,7 +439,7 @@ def test_camera_full_scenario():
             except:
                 continue
 
-        time.sleep(10) # 10초 녹화
+        time.sleep(5) # 5초 녹화
 
         # 녹화 중지
         for r_id in record_ids:
@@ -560,10 +464,9 @@ def test_camera_full_scenario():
             result.error_message += "Rear Video No File; "
 
         # ---------------------------------------------------------
-        # TC_CAM_07: Gallery access from video mode
         # 7. 갤러리 진입 확인 (비디오)
         # ---------------------------------------------------------
-        print("\n[Step 7] 갤러리 진입 확인 (비디오) (TC_CAM_07)")
+        print("\n[Step 7] 갤러리 진입 확인 (비디오)")
         try:
             # 썸네일 클릭
             size = driver.get_window_size()
@@ -574,28 +477,17 @@ def test_camera_full_scenario():
 
             # 갤러리 앱 패키지 확인
             curr_pkg = driver.current_package
-            if 'gallery' in curr_pkg.lower() or 'photo' in curr_pkg.lower() or 'camera' in curr_pkg.lower():
+            if 'gallery' in curr_pkg.lower() or 'photo' in curr_pkg.lower():
                 print("  ✅ 갤러리 진입 성공")
                 result.gallery_video_check = "PASS"
+                driver.back() # 카메라로 복귀
             else:
                 print(f"  ⚠ 갤러리 진입 불확실 (현재 앱: {curr_pkg})")
                 result.gallery_video_check = "PASS" # 일단 PASS 처리
-
-            # 카메라 앱으로 복귀 (back 대신 앱 재실행)
-            print("  🔄 카메라 앱으로 복귀 중...")
-            driver.activate_app('com.google.android.GoogleCamera')
-            time.sleep(3)
-            print("  ✓ 카메라 앱 복귀 완료")
-
+                driver.back()
         except Exception as e:
             print(f"  ❌ 갤러리 진입 에러: {e}")
             result.gallery_video_check = "FAIL"
-            # 에러 발생 시에도 카메라 앱으로 복귀
-            try:
-                driver.activate_app('com.google.android.GoogleCamera')
-                time.sleep(3)
-            except:
-                pass
 
         # ---------------------------------------------------------
         # 최종 결과 처리
@@ -603,7 +495,7 @@ def test_camera_full_scenario():
         result.calculate_overall_result()
         print(f"\n🏁 최종 결과: {result.overall_result}")
 
-        # [성공 스크린샷] 날짜별 폴더에 저장 (Windows 경로)
+        # [성공 스크린샷] 날짜별 폴더에 저장
         file_name = f"camera_test_PASS_{datetime.now().strftime('%H%M%S')}.png"
         screenshot_path = f"{today_folder}\\{file_name}"
         driver.save_screenshot(screenshot_path)
@@ -616,7 +508,7 @@ def test_camera_full_scenario():
         result.overall_result = "FAIL"
         result.error_message += f"Critical: {str(e)}"
 
-        # [에러 스크린샷] 날짜별 폴더에 저장 (Windows 경로)
+        # [에러 스크린샷] 날짜별 폴더에 저장
         if driver:
             try:
                 file_name = f"camera_error_{datetime.now().strftime('%H%M%S')}.png"
