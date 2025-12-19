@@ -5,7 +5,8 @@
       "Bash(adb devices:*)",
       "Bash(lsof:*)",
       "Bash(ls:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(git add:*)"
     ]
   }
 }
