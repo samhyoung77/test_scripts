@@ -1,2 +1,33 @@
+# 민감정보
 credentials.json
-credentials.json
+
+# 테스트 결과물 (각 PC에서 로컬 보관)
+*_results/
+*.png
+*.jpg
+*.jpeg
+
+# IDE 설정 파일
+.idea/
+.vscode/
+.DS_Store
+.claude/
+
+# 구버전 파일 (로컬 참고용)
+old/
+
+# 임시/디버그 파일
+debug_*.py
+page_source.xml
+*.xml
+
+# 중복 파일 (통합됨)
+test_camera_mac01.py
+test_camera_mac02.py
+
+# Python 캐시
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+*.egg-info/

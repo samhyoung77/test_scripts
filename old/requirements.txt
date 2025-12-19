@@ -1,5 +1,0 @@
-Appium-Python-Client==5.2.4
-selenium>=4.26
-gspread==6.1.4
-oauth2client==4.1.3
-Pillow==11.1.0
