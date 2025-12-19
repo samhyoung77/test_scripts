@@ -1,6 +1,7 @@
 """
-Appium 카메라 자동화 테스트 스크립트 (Android/Windows 버전)
+Appium 카메라 자동화 테스트 스크립트 (크로스 플랫폼 버전)
 기능: Google Sheets 연동 + 날짜별 폴더 저장 + 파일 개수 검증 + 앱 강제 종료
+플랫폼: Windows, macOS, Linux 지원
 
 테스트 케이스 매핑:
 - TC_CAM_01: Front camera photo capture (전면 카메라 사진 촬영)
@@ -15,36 +16,30 @@ Appium 카메라 자동화 테스트 스크립트 (Android/Windows 버전)
 import sys
 import io
 import os
-import subprocess  # ADB 명령어를 쓰기 위해 추가
+import subprocess
 import time
 from datetime import datetime
-import subprocess  # [필수] 이 모듈을 import 해야 터미널 명령어를 쓸 수 있습니다.
 
 # ---------------------------------------------------------
-# [추가] Git 버전 정보를 동적으로 가져오는 함수
+# Git 버전 정보를 동적으로 가져오는 함수
 # ---------------------------------------------------------
 def get_git_version():
     try:
-        # git describe 명령어를 실행하여 태그와 해시값을 가져옵니다.
-        # 예: v1.0 (태그가 정확할 때) 또는 v1.0-4-g9a2b (태그 이후 4번 커밋됨)
-        # --dirty: 수정사항이 commit 되지 않은 상태면 '-dirty'를 붙여줌
+        # 스크립트가 있는 디렉토리에서 git 명령 실행
+        script_dir = os.path.dirname(os.path.abspath(__file__))
         version = subprocess.check_output(
-            ["git", "describe", "--tags", "--always", "--dirty"], 
-            stderr=subprocess.STDOUT
+            ["git", "describe", "--tags", "--always", "--dirty"],
+            stderr=subprocess.STDOUT,
+            cwd=script_dir
         ).strip().decode('utf-8')
         return version
     except Exception as e:
-        # Git이 설치 안 되어 있거나, .git 폴더가 없는 경우 대비
         print(f"Git 버전 확인 실패: {e}")
-        return "v1.0.0-manual" # [비상용] 수동 버전 (Git 실패 시 사용)
+        return "v1.0.0-manual"
 
-# ---------------------------------------------------------
-# [변경] 기존 하드코딩 변수 대체
-# ---------------------------------------------------------
-# (기존) TEST_VERSION = "1.2"  <-- 이 줄은 지우거나 주석 처리하세요.
-TEST_VERSION = get_git_version()  # <-- 이렇게 함수를 호출해서 담습니다.
-
-print(f"Current Test Version: {TEST_VERSION}") # 확인용 출력.
+# 테스트 버전 자동 설정
+TEST_VERSION = get_git_version()
+print(f"Current Test Version: {TEST_VERSION}")
 
 # Windows 콘솔 인코딩 설정 및 실시간 출력 활성화
 if sys.platform == 'win32':
@@ -63,9 +58,17 @@ from oauth2client.service_account import ServiceAccountCredentials
 # ========================================
 SPREADSHEET_NAME = "Appium Camera Test Results"
 SHEET_NAME = "TestResults"
-CREDENTIALS_FILE = "C:\\appium\\credentials.json"  # Windows 경로
-BASE_SAVE_DIR = "C:\\appium"  # 결과가 저장될 기본 폴더 (Windows 경로)
-TEST_VERSION = "v1.3.1W" #  현재 테스트 코드의 버전 (릴리즈 노트와 일치)
+
+# 플랫폼별 경로 자동 설정 (크로스 플랫폼 지원)
+if sys.platform == 'win32':  # Windows
+    BASE_SAVE_DIR = "C:\\appium"
+    CREDENTIALS_FILE = "C:\\appium\\credentials.json"
+elif sys.platform == 'darwin':  # macOS
+    BASE_SAVE_DIR = os.path.expanduser("~/appium")
+    CREDENTIALS_FILE = os.path.expanduser("~/appium/credentials.json")
+else:  # Linux
+    BASE_SAVE_DIR = os.path.expanduser("~/appium")
+    CREDENTIALS_FILE = os.path.expanduser("~/appium/credentials.json")
 
 class CameraTestResult:
     """테스트 결과를 저장하는 클래스"""
@@ -151,17 +154,17 @@ class GoogleSheetsLogger:
 def get_photo_count():
     """
     ADB를 이용해 카메라 폴더의 파일 목록을 가져와서 Python으로 개수를 셈
-    (Windows 호환 버전)
+    (크로스 플랫폼 버전)
     """
     try:
         # 폰 기종에 따라 경로가 다를 수 있음 (삼성 등 대부분 이 경로)
         target_path = "/sdcard/DCIM/Camera"
 
-        # Windows에서는 adb 명령어 직접 실행
-        cmd = f"adb shell ls {target_path}"
+        # 크로스 플랫폼 안전한 명령어 실행 (shell=True 제거)
+        cmd = ["adb", "shell", "ls", target_path]
 
         # 명령어 실행
-        output = subprocess.check_output(cmd, shell=True).decode('utf-8').strip()
+        output = subprocess.check_output(cmd).decode('utf-8').strip()
 
         # 결과가 없으면(파일이 없으면) 0 반환
         if not output:
@@ -187,9 +190,9 @@ def get_photo_count():
 def test_camera_full_scenario():
     """카메라 전체 시나리오 테스트"""
 
-    # [1] 날짜별 폴더 생성 로직 (Windows 경로 구분자 사용)
+    # [1] 날짜별 폴더 생성 로직 (크로스 플랫폼 경로)
     date_str = datetime.now().strftime('%Y%m%d')
-    today_folder = f"{BASE_SAVE_DIR}\\{date_str}_results"
+    today_folder = os.path.join(BASE_SAVE_DIR, f"{date_str}_results")
 
     if not os.path.exists(today_folder):
         os.makedirs(today_folder)
@@ -371,7 +374,7 @@ def test_camera_full_scenario():
         try:
             # 먼저 현재 화면 상태 확인 (디버깅용)
             try:
-                debug_screenshot = f"{today_folder}\\debug_before_video_mode.png"
+                debug_screenshot = os.path.join(today_folder, "debug_before_video_mode.png")
                 driver.save_screenshot(debug_screenshot)
                 print(f"  📸 디버그 스크린샷 저장: {debug_screenshot}")
             except:
@@ -603,9 +606,9 @@ def test_camera_full_scenario():
         result.calculate_overall_result()
         print(f"\n🏁 최종 결과: {result.overall_result}")
 
-        # [성공 스크린샷] 날짜별 폴더에 저장 (Windows 경로)
+        # [성공 스크린샷] 날짜별 폴더에 저장
         file_name = f"camera_test_PASS_{datetime.now().strftime('%H%M%S')}.png"
-        screenshot_path = f"{today_folder}\\{file_name}"
+        screenshot_path = os.path.join(today_folder, file_name)
         driver.save_screenshot(screenshot_path)
         print(f"🖼 스크린샷 저장: {screenshot_path}")
 
@@ -616,11 +619,11 @@ def test_camera_full_scenario():
         result.overall_result = "FAIL"
         result.error_message += f"Critical: {str(e)}"
 
-        # [에러 스크린샷] 날짜별 폴더에 저장 (Windows 경로)
+        # [에러 스크린샷] 날짜별 폴더에 저장
         if driver:
             try:
                 file_name = f"camera_error_{datetime.now().strftime('%H%M%S')}.png"
-                screenshot_path = f"{today_folder}\\{file_name}"
+                screenshot_path = os.path.join(today_folder, file_name)
                 driver.save_screenshot(screenshot_path)
                 print(f"🖼 에러 스크린샷 저장: {screenshot_path}")
             except:
