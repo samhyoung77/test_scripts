@@ -38,7 +38,7 @@ SPREADSHEET_NAME = "Appium Camera Test Results"
 SHEET_NAME = "TestResults"
 CREDENTIALS_FILE = "C:\\appium\\credentials.json"  # Windows 경로
 BASE_SAVE_DIR = "C:\\appium"  # 결과가 저장될 기본 폴더 (Windows 경로)
-TEST_VERSION = "v1.3.1" #  현재 테스트 코드의 버전 (릴리즈 노트와 일치)
+TEST_VERSION = "v1.3.1W" #  현재 테스트 코드의 버전 (릴리즈 노트와 일치)
 
 class CameraTestResult:
     """테스트 결과를 저장하는 클래스"""
