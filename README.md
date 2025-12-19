@@ -1,6 +1,6 @@
 # 📸 Appium Android Camera Automation
 
-Appium과 Python을 사용하여 안드로이드 디바이스의 카메라 기능을 자동으로 테스트하고, 결과를 Google Sheets에 기록하는 자동화 프로젝트입니다.
+Appium과 Python을 사용하여 안드로이드 디바이스의 구글 카메라 기능을 자동으로 테스트하고, 결과를 Google Sheets에 기록하는 자동화 프로젝트입니다.
 
 ## 📋 주요 기능 (Features)
 - **자동 촬영:** 전면/후면 카메라 사진 및 동영상 촬영 자동화
@@ -10,7 +10,7 @@ Appium과 Python을 사용하여 안드로이드 디바이스의 카메라 기�
 - **버전 관리:** 테스트 실행 시 코드 버전(Version) 정보 자동 기록
 
 ## 🛠️ 요구 사항 (Prerequisites)
-- macOS 
+- 스크립트 구동 OS : macOS(test_camera_macxx.py) or Windows (test_camera_androidxx.py)
 - Python 3.x
 - Appium Server & Inspector
 - Android Device (Developer Mode ON, USB Debugging ON)
