@@ -10,7 +10,7 @@ Appium과 Python을 사용하여 안드로이드 디바이스의 구글 카메�
 - **버전 관리:** 테스트 실행 시 코드 버전(Version) 정보 자동 기록
 
 ## 🛠️ 요구 사항 (Prerequisites)
-- 스크립트 구동 OS : macOS(test_camera_macxx.py) or Windows (test_camera_androidxx.py)
+- 스크립트 구동 OS : macOS or Windows  or linux
 - Python 3.x
 - Appium Server & Inspector
 - Android Device (Developer Mode ON, USB Debugging ON)
