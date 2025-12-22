@@ -228,6 +228,25 @@ def click_samsung_shutter(driver):
             return False
 
 
+def click_samsung_thumbnail(driver):
+    """삼성 카메라 썸네일(갤러리) 버튼 클릭"""
+    try:
+        # 방법 1: 텍스트로 찾기
+        thumbnail_button = driver.find_element(AppiumBy.XPATH, "//*[@text='Quick view']")
+        thumbnail_button.click()
+        print("  ✓ 썸네일 클릭 (텍스트)")
+        return True
+    except:
+        try:
+            # 방법 2: 좌표로 클릭 (bounds="[192,1896][323,2027]" - 왼쪽 하단)
+            driver.tap([(257, 1961)])
+            print("  ✓ 썸네일 클릭 (좌표)")
+            return True
+        except Exception as e:
+            print(f"  ❌ 썸네일 클릭 실패: {e}")
+            return False
+
+
 def test_camera_full_scenario():
     """카메라 전체 시나리오 테스트"""
 
@@ -334,11 +353,8 @@ def test_camera_full_scenario():
         # ---------------------------------------------------------
         print("\n[Step 3] 갤러리 진입 확인 (사진) (TC_CAM_03)")
         try:
-            # 썸네일 좌표(대략적 위치) 클릭 시도
-            size = driver.get_window_size()
-            thumb_x = int(size['width'] * 0.85) # 오른쪽
-            thumb_y = int(size['height'] * 0.85) # 아래쪽
-            driver.tap([(thumb_x, thumb_y)])
+            # 삼성 카메라 썸네일 클릭 (왼쪽 하단)
+            click_samsung_thumbnail(driver)
             time.sleep(3)
 
             # 갤러리 앱 패키지 확인
@@ -456,11 +472,8 @@ def test_camera_full_scenario():
         # ---------------------------------------------------------
         print("\n[Step 7] 갤러리 진입 확인 (비디오) (TC_CAM_07)")
         try:
-            # 썸네일 클릭
-            size = driver.get_window_size()
-            thumb_x = int(size['width'] * 0.85)
-            thumb_y = int(size['height'] * 0.85)
-            driver.tap([(thumb_x, thumb_y)])
+            # 삼성 카메라 썸네일 클릭 (왼쪽 하단)
+            click_samsung_thumbnail(driver)
             time.sleep(3)
 
             # 갤러리 앱 패키지 확인
