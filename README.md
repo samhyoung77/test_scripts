@@ -14,7 +14,7 @@ Appium과 Python을 사용하여 안드로이드 디바이스의 구글 카메�
 - Python 3.x
 - Appium Server & Inspector
 - Android Device (Developer Mode ON, USB Debugging ON)
-- Google Cloud Service Account (`credentials.json`) - 별도 파일복사 필요 
+- Google Cloud Service Account (`credentials.json`) 
 
 ## 📦 설치 및 실행 (Installation & Usage)
 
