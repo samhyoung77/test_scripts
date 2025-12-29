@@ -17,7 +17,7 @@ Appium 카메라 자동화 테스트 스크립트 (크로스 플랫폼 버전)
 import sys
 import io
 import os
-import subprocess
+import subprocess # nosec B404
 import time
 from datetime import datetime
 
@@ -28,7 +28,7 @@ def get_git_version():
     try:
         # 스크립트가 있는 디렉토리에서 git 명령 실행
         script_dir = os.path.dirname(os.path.abspath(__file__))
-        version = subprocess.check_output(
+        version = subprocess.check_output(  # nosec B603 B607
             ["git", "describe", "--tags", "--always", "--dirty"],
             stderr=subprocess.STDOUT,
             cwd=script_dir
@@ -165,7 +165,7 @@ def get_photo_count():
         cmd = ["adb", "shell", "ls", target_path]
 
         # 명령어 실행
-        output = subprocess.check_output(cmd).decode('utf-8').strip()
+        output = subprocess.check_output(cmd).decode('utf-8').strip()   # nosec B603
 
         # 결과가 없으면(파일이 없으면) 0 반환
         if not output:
@@ -197,7 +197,7 @@ def click_samsung_switch_camera(driver):
         print("  ✓ 카메라 전환 (텍스트)")
         time.sleep(2)
         return True
-    except:
+    except:  
         try:
             # 방법 2: 좌표로 클릭 (bounds="[757,1896][888,2027]")
             driver.tap([(822, 1961)])
@@ -217,7 +217,7 @@ def click_samsung_shutter(driver):
         shutter_button.click()
         print("  ✓ 셔터 클릭 (텍스트)")
         return True
-    except:
+    except:  
         try:
             # 방법 2: 좌표로 클릭 (bounds="[444,1866][636,2057]")
             driver.tap([(540, 1961)])
@@ -236,7 +236,7 @@ def click_samsung_thumbnail(driver):
         thumbnail_button.click()
         print("  ✓ 썸네일 클릭 (텍스트)")
         return True
-    except:
+    except:  
         try:
             # 방법 2: 좌표로 클릭 (bounds="[192,1896][323,2027]" - 왼쪽 하단)
             driver.tap([(257, 1961)])
@@ -379,7 +379,7 @@ def test_camera_full_scenario():
             try:
                 driver.activate_app('com.sec.android.app.camera')
                 time.sleep(3)
-            except:
+            except:  # nosec B110
                 pass
 
         # ---------------------------------------------------------
@@ -393,7 +393,7 @@ def test_camera_full_scenario():
             video_button.click()
             print("  ✓ 비디오 모드로 전환 (텍스트)")
             time.sleep(2)
-        except:
+        except:   
             try:
                 # 좌표로 시도
                 driver.tap([(755, 1772)])
@@ -498,7 +498,7 @@ def test_camera_full_scenario():
             try:
                 driver.activate_app('com.sec.android.app.camera')
                 time.sleep(3)
-            except:
+            except:  # nosec B110
                 pass
 
         # ---------------------------------------------------------
@@ -527,7 +527,7 @@ def test_camera_full_scenario():
                 screenshot_path = os.path.join(today_folder, file_name)
                 driver.save_screenshot(screenshot_path)
                 print(f"🖼 에러 스크린샷 저장: {screenshot_path}")
-            except:
+            except:  # nosec B110
                 pass
         return result
 
