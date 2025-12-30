@@ -13,6 +13,6 @@ oauth2client>=4.1.3
 # Additional Dependencies
 python-dateutil>=2.8.2
 
-# [핵심 수정] Python 3.7 호환되는 안전한 버전으로 '고정'
-urllib3==1.26.19
-requests>=2.32.2
+# [보안 수정] Snyk 취약점 해결
+urllib3>=2.6.0
+requests>=2.32.4
