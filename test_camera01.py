@@ -63,10 +63,7 @@ SHEET_NAME = "TestResults"
 if sys.platform == 'win32':  # Windows
     BASE_SAVE_DIR = "C:\\appium"
     CREDENTIALS_FILE = "C:\\appium\\credentials.json"
-elif sys.platform == 'darwin':  # macOS
-    BASE_SAVE_DIR = os.path.expanduser("~/appium")
-    CREDENTIALS_FILE = os.path.expanduser("~/appium/credentials.json")
-else:  # Linux
+else:  # macOS, Linux (Unix 계열)
     BASE_SAVE_DIR = os.path.expanduser("~/appium")
     CREDENTIALS_FILE = os.path.expanduser("~/appium/credentials.json")
 
@@ -248,7 +245,7 @@ def test_camera_full_scenario():
                 driver.find_element(AppiumBy.ID, s_id).click()
                 time.sleep(1)
                 break
-            except:   # nosec B110
+            except Exception:   # nosec B110
                 pass
 
         # 촬영 전 개수 확인
@@ -265,7 +262,7 @@ def test_camera_full_scenario():
                 shutter_clicked = True
                 print("  ✓ 셔터 클릭함")
                 break
-            except:  # nosec B112
+            except Exception:  # nosec B112
                 continue
 
         if not shutter_clicked:
@@ -300,7 +297,7 @@ def test_camera_full_scenario():
                 driver.find_element(AppiumBy.ID, s_id).click()
                 time.sleep(2)
                 break
-            except:  # nosec B110
+            except Exception:  # nosec B110
                 pass
 
         before_count = get_photo_count()
@@ -312,7 +309,7 @@ def test_camera_full_scenario():
                 driver.find_element(AppiumBy.ID, s_id).click()
                 print("  ✓ 셔터 클릭함")
                 break
-            except:  # nosec B112
+            except Exception:  # nosec B112
                 continue
 
         time.sleep(5) # 저장 대기
@@ -363,7 +360,7 @@ def test_camera_full_scenario():
             try:
                 driver.activate_app('com.google.android.GoogleCamera')
                 time.sleep(3)
-            except:  # nosec B110
+            except Exception:  # nosec B110
                 pass
 
         # ---------------------------------------------------------
@@ -377,7 +374,7 @@ def test_camera_full_scenario():
                 debug_screenshot = os.path.join(today_folder, "debug_before_video_mode.png")
                 driver.save_screenshot(debug_screenshot)
                 print(f"  📸 디버그 스크린샷 저장: {debug_screenshot}")
-            except:  # nosec B110
+            except Exception:  # nosec B110
                 pass
 
             # 방법 1: 텍스트로 찾기 (한글/영문)
@@ -391,7 +388,7 @@ def test_camera_full_scenario():
                     print(f"  ✓ 비디오 모드로 전환 (텍스트: {text})")
                     time.sleep(2)
                     break
-                except:  # nosec B112
+                except Exception:  # nosec B112
                     continue
 
             # 방법 2: content-desc로 찾기
@@ -405,7 +402,7 @@ def test_camera_full_scenario():
                         print(f"  ✓ 비디오 모드로 전환 (desc: {desc})")
                         time.sleep(2)
                         break
-                    except:  # nosec B112
+                    except Exception:  # nosec B112
                         continue
 
             # 방법 3: resource-id로 찾기
@@ -423,7 +420,7 @@ def test_camera_full_scenario():
                         print(f"  ✓ 비디오 모드로 전환 (ID: {v_id})")
                         time.sleep(2)
                         break
-                    except:   # nosec B112
+                    except Exception:   # nosec B112
                         continue
 
             # 방법 4: 스와이프로 모드 전환 (왼쪽으로 한 번)
@@ -462,7 +459,7 @@ def test_camera_full_scenario():
                 driver.find_element(AppiumBy.ID, s_id).click()
                 time.sleep(2)
                 break
-            except:  # nosec B110
+            except Exception:  # nosec B110
                 pass
 
         before_count = get_photo_count()
@@ -478,7 +475,7 @@ def test_camera_full_scenario():
                 record_clicked = True
                 print("  ✓ 녹화 시작")
                 break
-            except:  # nosec B112
+            except Exception:  # nosec B112
                 continue
 
         if not record_clicked:
@@ -495,7 +492,7 @@ def test_camera_full_scenario():
                 driver.find_element(AppiumBy.ID, r_id).click()
                 print("  ✓ 녹화 중지")
                 break
-            except:  # nosec B112
+            except Exception:  # nosec B112
                 continue
 
         time.sleep(5) # 저장 대기
@@ -523,7 +520,7 @@ def test_camera_full_scenario():
                 driver.find_element(AppiumBy.ID, s_id).click()
                 time.sleep(2)
                 break
-            except:  # nosec B110
+            except Exception:  # nosec B110
                 pass
 
         before_count = get_photo_count()
@@ -535,7 +532,7 @@ def test_camera_full_scenario():
                 driver.find_element(AppiumBy.ID, r_id).click()
                 print("  ✓ 녹화 시작")
                 break
-            except:  # nosec B112
+            except Exception:  # nosec B112
                 continue
 
         time.sleep(10) # 10초 녹화
@@ -546,7 +543,7 @@ def test_camera_full_scenario():
                 driver.find_element(AppiumBy.ID, r_id).click()
                 print("  ✓ 녹화 중지")
                 break
-            except:  # nosec B112
+            except Exception:  # nosec B112
                 continue
 
         time.sleep(5) # 저장 대기
@@ -597,7 +594,7 @@ def test_camera_full_scenario():
             try:
                 driver.activate_app('com.google.android.GoogleCamera')
                 time.sleep(3)
-            except:   # nosec B110
+            except Exception:   # nosec B110
                 pass
 
         # ---------------------------------------------------------
@@ -626,7 +623,7 @@ def test_camera_full_scenario():
                 screenshot_path = os.path.join(today_folder, file_name)
                 driver.save_screenshot(screenshot_path)
                 print(f"🖼 에러 스크린샷 저장: {screenshot_path}")
-            except:  # nosec B110
+            except Exception:  # nosec B110
                 pass
         return result
 
